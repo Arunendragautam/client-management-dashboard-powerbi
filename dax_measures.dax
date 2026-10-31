@@ -1,0 +1,26 @@
+-- ===== Calendar table (Modeling > New table) =====
+DimDate =
+ADDCOLUMNS(
+    CALENDAR(DATE(2024,1,1), DATE(2026,12,31)),
+    "Year", YEAR([Date]),
+    "MonthNo", MONTH([Date]),
+    "Month", FORMAT([Date], "MMM"),
+    "YearMonth", FORMAT([Date], "YYYY-MM")
+)
+
+-- ===== Measures (put them in a table called _Measures) =====
+Total Revenue      = SUM(Transactions[Amount])
+Total Clients      = DISTINCTCOUNT(Clients[ClientID])
+Active Clients     = CALCULATE([Total Clients], Clients[Status] = "Active")
+Active Client %    = DIVIDE([Active Clients], [Total Clients], 0)
+Total Transactions = COUNTROWS(Transactions)
+Avg Deal Size      = DIVIDE([Total Revenue], [Total Transactions], 0)
+Revenue per Client = DIVIDE([Total Revenue], [Total Clients], 0)
+
+Revenue LY         = CALCULATE([Total Revenue], SAMEPERIODLASTYEAR(DimDate[Date]))
+Revenue YoY %      = DIVIDE([Total Revenue] - [Revenue LY], [Revenue LY])
+
+-- Clients who bought something in the selected period
+Buying Clients     = CALCULATE(DISTINCTCOUNT(Transactions[ClientID]))
+-- Dormant = in the client list but no purchases in the current filter context
+Dormant Clients    = [Total Clients] - [Buying Clients]
